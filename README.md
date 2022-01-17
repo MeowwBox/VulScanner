@@ -8,7 +8,7 @@
 
 1. 增加FoFa查询条数配置，可在`config.ini`中配置
 
-   <img src="images/image-20220117194241984.png" alt="image-20220117194241984" style="zoom:25%;" />	
+   <img src="images/image-20220117195249570.png" alt="image-20220117195249570" style="zoom:33%;" />		
 
    也可直接在FoFa搜索界面动态修改：
 
