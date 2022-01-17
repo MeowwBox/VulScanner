@@ -3,6 +3,7 @@ import os
 from . import requestUtil
 from . import IpUtil
 import threading
+import IPy
 from ScanTaskModel.models import ScanTask
 from AliveModel.models import AliveScan
 from GroupModel.models import Group
@@ -35,16 +36,17 @@ class Test(threading.Thread):
         return self.result
 
 
-
-
-
-def get_c_ips(ips):
-    ip_list = [".".join(i.split(".")[:-1]) + ".0/24" for i in (IpUtil.get_all_ips(ips))]
-    c_ip_List = []
-    for i in ip_list:
-        if i not in c_ip_List:
-            c_ip_List.append(i)
-    return c_ip_List
+def get_c_ip_count(ip_range):
+    count = 1
+    for i in range(0, 3):
+        count += ((int(ip_range[1].split(".")[i]) - int(ip_range[0].split(".")[i])) * pow(256, 2 - i))
+    # ip_list = [".".join(i.split(".")[:-1]) + ".0/24" for i in (IpUtil.get_all_ips(ips))]
+    # c_ip_List = []
+    # for i in ip_list:
+    #     if i not in c_ip_List:
+    #         c_ip_List.append(i)
+    # return c_ip_List
+    return count
 
 
 def burp(burp_list):
@@ -72,24 +74,30 @@ def test_alive(ips, mode="http"):
 
 
 def alive_scan(ips, mode, gid):
-    c_ips = get_c_ips(ips)
+    ip_range = IpUtil.get_dec_ip_range(ips)
+    f_c_ip = IPy.IP(".".join(ip_range[0].split(".")[:-1]) + ".0")
+    c_ip_count = get_c_ip_count(ip_range)
     mode_desc = "HTTP" if mode == "http" else "PING"
     try:
         group = Group.objects.get(id=gid)
     except:
         group = Group.objects.first()
-    task = ScanTask(ip_range=ips, task_count=len(c_ips) * 256, mode="alive", description=f"{group.name} ({mode_desc})", group=gid)
+    task = ScanTask(ip_range=ips, task_count=c_ip_count, mode="alive", description=f"{group.name} ({mode_desc})",
+                    group=gid)
     task.save()
     tid = task.id
     try:
-        for i in c_ips:
-            flag = test_alive(i, mode)
+        for i in range(0, c_ip_count):
+            if i > 0:
+                c_ip = str(IPy.IP(int(f_c_ip.strDec()) + 256*i)) + "/24"
+            else:
+                c_ip = str(f_c_ip) + "/24"
+            flag = test_alive(c_ip, mode)
             if flag:
-                alive_scan = AliveScan(ip=i, flag=flag, taskid=tid, mode=mode_desc)
+                alive_scan = AliveScan(ip=c_ip, flag=flag, taskid=tid, mode=mode_desc)
                 alive_scan.save()
-            task.service_process += 256
+            task.service_process += 1
             task.save(update_fields=["service_process"])
     finally:
         task.save()
     return True
-

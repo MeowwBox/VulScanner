@@ -32,8 +32,7 @@
                 <div class="col-md-2 text-left group-div">
                     <select class="selectpicker group-selectpicker" data-width="130px" id="group">
                         {% for i in groups %}
-                            <option value="{{ i.id }}"
-                                    selected="selected">{{ i.name }}</option>
+                            <option value="{{ i.id }}">{{ i.name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -87,7 +86,7 @@
             <div class="col-md-12 text-info unactive-ip target-div scan-ip" style="margin: 5px">
                 <div class="pull-left ">
                     <span class="glyphicon glyphicon-refresh"></span>
-                    正在查询 <span class="target-ip">{{ task.ip_range }}</span> ...
+                    正在检测 <span class="target-ip">{{ task.ip_range }}</span> ...
                 </div>
                 <div class=" pull-right">
                     <div>

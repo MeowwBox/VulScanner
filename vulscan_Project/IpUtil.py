@@ -45,3 +45,15 @@ def get_all_ips(ips: str):
         all_ip_list.extend(ip_list)
     return all_ip_list
 
+
+def get_dec_ip_range(ips: str):
+    if r"/" in ips:
+        dec_ip = int(IPy.IP(ips.split("/")[0].strip()).strDec())
+        mode = int(ips.split("/")[-1])
+        f_ip = int(dec_ip / pow(2, 32-mode)) * pow(2, 32-mode)
+        l_ip = f_ip+pow(2, 32-mode)-1
+    # elif "-" in ips:
+    else:
+        f_ip = ips.split("-")[0].strip()
+        l_ip = ips.split("-")[-1].strip()
+    return [str(IPy.IP(f_ip)), str(IPy.IP(l_ip))]

@@ -10,7 +10,7 @@ from PocModel.models import Poc
 from VulnScanModel.models import VulnScan
 from ServiceScanModel.models import ServiceScan
 from PwdModel.models import Pwd
-from . import serviceUtil, vulnUtil, IpModelUtil, scan, pageUtil
+from . import serviceUtil, vulnUtil, IpModelUtil, scan, pageUtil, resultUtil
 
 label_dict = {
     "high": "<label class='label label-danger'>{text}</label>",
@@ -206,14 +206,14 @@ def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结
                                                spec_labels=vuln_labels, status=status, note="")
             # print(new_rows)
     elif mode == "ip":
-        new_result = IpModelUtil.get_results(task_id)
+        new_result = resultUtil.get_results(task_id)
         process = task.service_process / task.task_count
         for i in new_result:
             count += 1
             new_rows += ip_row.format(id=count, ip=i.ip, location=i.location, desc=i.location.split(" ")[-1],
                                       ip_num=get_ip_num(i.ip))
     elif mode == "alive":
-        new_result = IpModelUtil.get_results(task_id, mode="alive")
+        new_result = resultUtil.get_results(task_id, mode="alive")
         process = task.service_process / task.task_count
         for i in new_result:
             count += 1

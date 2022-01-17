@@ -3,7 +3,7 @@ import re
 
 def get_pages(page, last_page):
     page_list = []
-    if last_page < 9:
+    if last_page < 10:
         for i in range(1, last_page + 1):
             page_list.append(i)
         return page_list
