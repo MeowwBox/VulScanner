@@ -261,6 +261,7 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                                     <li class="divider">
                                     <li><a href="javascript:void(0)" class="ip-list" id="3">常见81端口 ({{ ports.3 }}) </a>
                                     </li>
+                                    <li class="divider">
                                     <li><a href="javascript:void(0)" class="ip-list" id="4">全部端口 ({{ ports.4 }}) </a>
                                     </li>
                                     <li class="divider">
@@ -359,10 +360,10 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                                 </thead>
                                 <tbody class="table-context" class="context">
                                 {% for i in result_list %}
-                                    <tr>
-                                        <td>{{ forloop.counter }}</td>
-                                        <td>{{ i.ip }}</td>
-                                        <td>{% for p in i.ports %}
+                                    <tr class="tr-info">
+                                        <td class="count">{{ forloop.counter }}</td>
+                                        <td><span>{{ i.ip }} </span></td>
+                                        <td class="port">{% for p in i.ports %}
                                             {% if p.type == "high" %}
                                                 <label class="label label-danger">{{ p.label }}</label>
                                             {% elif p.type == "medium" %}
@@ -371,6 +372,10 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                                                 <label class="label label-success">{{ p.label }}</label>
                                             {% endif %}
                                         {% endfor %}
+{#                                            <a href="javascript:void(0)" class="unactive"#}
+{#                                               onclick="more_info($(this), '{{ i.ip }}')">#}
+{#                                                <span class="glyphicon glyphicon-search pull-right"#}
+{#                                                      style="color: #ce8483"></span></a>#}
                                         </td>
                                         <td>
                                             {% for p in i.ports %}
@@ -430,6 +435,46 @@ glyphicon-eye-open
     <script src="/static/js/func.js"></script>
     {% block servicebody %}
         <script>
+            $(".tr-info").hover(function () {
+                $(this).children("td.port").children("a").removeClass("unactive").addClass("active")
+            }, function () {
+                $(this).children("td.port").children("a").addClass("unactive").removeClass("active")
+
+            })
+
+            function more_info(ele, ip) {
+                tr_ele = ele.parent("td").parent("tr")
+                count_ele = ele.parent("td").siblings(".count")
+                $.get("/json/info/", {
+                    "ip": ip,
+                    "group": "{{ task.group }}",
+                    "count": count_ele.html()
+                }, function (data) {
+                    tr_ele.html(data)
+                    active_toggle()
+                })
+            }
+
+            function active_toggle() {
+                $("[data-toggle='popover']").hover(function () {
+                    $(this).popover('show')
+                }, function () {
+                    $(this).popover('hide')
+                })
+                $("[data-toggle='popover']").on('show.bs.popover', function () {
+                    $("[data-toggle='popover']").not(this).popover("hide")
+                })
+            }
+
+
+            {#function more_info(ele, id) {#}
+            {#    /*踩坑，不能预先设置data-toggle="popover"属性，否则会提前渲染，无法改变其他属性*/#}
+            {#    ip_ele = ele.siblings(".ip")#}
+            {#    ip_ele.attr("data-title", "详细信息")#}
+            {#    ip_ele.attr("data-content", '开放端口：80, 81, 8080<br><br>漏洞信息：无')#}
+            {#    ip_ele.attr("data-html", "true")#}
+            {#    ip_ele.popover('show')#}
+
             function clear_note(task_id) {
                 $.get("/json/clear/note/?tid=" + task_id, function () {
                     $(".new-note").val("")
@@ -496,14 +541,7 @@ glyphicon-eye-open
                         $(".table-context").append(data["html"])
                         result_count = data["count"]
                         reload_process((+data["process"]))
-                        $("[data-toggle='popover']").hover(function () {
-                            $(this).popover('show')
-                        }, function () {
-                            $(this).popover('hide')
-                        })
-                        $("[data-toggle='popover']").on('show.bs.popover', function () {
-                            $("[data-toggle='popover']").not(this).popover("hide")
-                        })
+                        active_toggle()
                         if ($(".progress-bar").width() === $(".progress").width()) {
                             $(".extend").html("<button class=\"btn btn-warning btn-sm\"" +
                                 "                                onclick=\"clear_note(" + task_id + "}})\">清空备注</button>" +
@@ -518,7 +556,9 @@ glyphicon-eye-open
                         } else if (isPause) {
                             return true
                         } else {
-                            setTimeout("refresh_table()", 5000)
+                            if (result_count < 100) {
+                                setTimeout("refresh_table()", 5000)
+                            }
                         }
                     },).error(function () {
                     setTimeout("refresh_table()", 5000)
@@ -614,23 +654,23 @@ glyphicon-eye-open
                 $(".selectpicker").val(group)
                 task_id =
                     {{ task.id }}
-                    $("[data-toggle='popover']").on('show.bs.popover', function () {
-                        $("[data-toggle='popover']").not(this).popover("hide")
-                    })
+                active_toggle()
+                {% if new_ip %}
+                    test()
+                {% endif %}
                 isPause = {% if isPause %}true{% else %}false{% endif %}
                 result_count =
                     {{ count }}
-                    {% if new_ip %}
-                        test()
+                    {% if process != 100 %}
+                        animate_ico(isPause)
+                        {% if not isPause %}
+                            if (result_count < 100) {
+                                refresh_table()
+                            }
+                        {% else %}
+                            scan_over()
+                        {% endif %}
                     {% endif %}
-                {% if process != 100 %}
-                    animate_ico(isPause)
-                    {% if not isPause %}
-                        refresh_table()
-                    {% else %}
-                        scan_over()
-                    {% endif %}
-                {% endif %}
             })
 
         </script>

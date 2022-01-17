@@ -221,6 +221,9 @@
             $("[data-toggle='popover']").on('show.bs.popover', function () {
                 $("[data-toggle='popover']").not(this).popover("hide")
             })
+            {% if new_ip %}
+                test()
+            {% endif %}
             isPause = {% if isPause %}true{% else %}false{% endif %}
             result_count =
                 {{ count }}
@@ -234,9 +237,6 @@
             $(".refresh-btn").click(function () {
                 location.href = "/scan/ip/?id=" + task_id
             })
-            {% if new_ip %}
-                test()
-            {% endif %}
         })
 
         $(".glyphicon-share-alt").click(function () {

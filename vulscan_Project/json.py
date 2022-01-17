@@ -1,5 +1,6 @@
 import json
 import math
+import re
 
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
@@ -18,7 +19,17 @@ label_dict = {
     "low": "<label class='label label-success'>{text}</label>",
 }
 
-service_row = "<tr><td>{id}</td><td>{ip}</td><td>{port_labels}</td><td>{spec_labels}</td>{note}<td><a href=\"#\"><span class=\"glyphicon glyphicon-eye-{status}\"></span></a></td></tr>"
+service_row = """"
+<tr>
+    <td>{id}</td>
+    <td>{ip}</td>
+    <td class="port">{port_labels}</td>
+    <td>{spec_labels}</td>
+    {note}
+    <td><a href=\"#\"><span class=\"glyphicon glyphicon-eye-{status}\"></span></a></td>
+</tr>
+"""
+
 
 vuln_label = '''
 <label class="label label-{risk}" data-toggle="popover"
@@ -29,12 +40,12 @@ vuln_label = '''
                                         </a></label>
 '''
 
-service_label = ''' <label class="label label-default" data-toggle="popover"
+service_label = '''<label class="label label-default" data-toggle="popover"
 data-placement="auto right"
 data-title="Title: {title}" data-content="Port: {port}<br>Server: {server}"
 data-html="true">
 <a href="javascript:void(0)" onclick='window.open("{url}")' style="color: white">
-<span class='port'>{port}: </span>{t_title}</a></label> '''
+<span class='port'>{port}: </span>{t_title}</a></label>'''
 note_column = """
 <td style="color: crimson" class="text-center note">
     <input class="unactive new-note" value="{note}" id="{ip}" style="height: 22px" name="note"/>
@@ -156,6 +167,26 @@ def get_ip_num(ip: str):
     return ip_num
 
 
+def get_new_rows(new_result, count):
+    new_rows = ""
+    for i in new_result:
+        status = "open" if i["vulnerable"] else "close"
+        count += 1
+        port_labels = ""
+        service_labels = ""
+        for p in i["ports"]:
+            if not p["title"] == "":
+                service_labels += service_label.format(port=p["port"], title=p["title"], server=p["server"],
+                                                       t_title=(
+                                                           p["title"][:9] + "..." if len(p["title"]) > 9 else
+                                                           p["title"]), url=p["url"])
+            port_labels += label_dict[p["type"]].format(text=p["label"]) + " "
+        new_rows += service_row.format(id=count, ip=i["ip"], port_labels=port_labels,
+                                       spec_labels=service_labels, status=status,
+                                       note=note_column.format(note=i["note"], ip=i["ip"]))
+    return new_rows, count
+
+
 def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结果
     mode = request.GET["mode"]
     count = process = 0
@@ -165,24 +196,10 @@ def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结
         count = int(request.GET["count"])
     new_rows = ""
     if mode == "service" or mode == "fofa":
-        new_result = serviceUtil.get_results(task_id)
+        new_result = serviceUtil.get_results(task_id, group_id=task.group)
         process = task.service_process / task.task_count
         if new_result != [{}]:
-            for i in new_result:
-                status = "open" if i["vulnerable"] else "close"
-                count += 1
-                port_labels = ""
-                service_labels = ""
-                for p in i["ports"]:
-                    if not p["title"] == "":
-                        service_labels += service_label.format(port=p["port"], title=p["title"], server=p["server"],
-                                                               t_title=(
-                                                                   p["title"][:9] + "..." if len(p["title"]) > 9 else
-                                                                   p["title"]), url=p["url"])
-                    port_labels += label_dict[p["type"]].format(text=p["label"]) + " "
-                new_rows += service_row.format(id=count, ip=i["ip"], port_labels=port_labels,
-                                               spec_labels=service_labels, status=status,
-                                               note=note_column.format(note=i["note"], ip=i["ip"]))
+            new_rows, count = get_new_rows(new_result, count)
     elif mode == "vuln":
         process = task.vuln_process / task.vuln_count if task.vuln_count != 0 else 0
         new_result = vulnUtil.get_results(task_id)
@@ -346,3 +363,14 @@ def change_fofa(request: HttpRequest):
     fofa_test = "true" if request.GET["fofa_test"] == "1" else "false"
     serviceUtil.change_fofa(fofa_size, fofa_test)
     return HttpResponse("success")
+
+
+# 点击获取全部信息 -> 直接在初始时合并所有同组任务
+def more_info(request: HttpRequest):
+    print(request.GET)
+    new_result = serviceUtil.get_results(group_id=int(request.GET["group"]), ip=request.GET["ip"], isAll=True)
+    new_rows = get_new_rows(new_result, int(request.GET["count"]) - 1)
+    # sid = request.GET["id"]
+    # service = ServiceScan.objects.get(id=sid)
+    # print(service.ip)
+    return HttpResponse(re.findall('<tr>(.*?)</tr>', new_rows[0], re.DOTALL)[0])

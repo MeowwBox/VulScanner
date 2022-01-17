@@ -93,7 +93,7 @@ def scan(request: HttpRequest, mode, query):
         if mode == "service" or mode == "fofa":
             ctx["process"] = task.service_process / task.task_count * 100 if not task.task_count == 0 else 0
             count = serviceUtil.get_count(task_id)
-            result_list = serviceUtil.get_results(task_id, isAll=True, page=page, each_num=each_num)
+            result_list = serviceUtil.get_results(task_id, isAll=True, page=page, each_num=each_num, group_id=task.group)
             if mode == "fofa":
                 conf2 = configparser.ConfigParser()
                 conf2.read((os.path.dirname(os.path.abspath("settings.py"))) + "\config.ini")

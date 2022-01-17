@@ -134,13 +134,11 @@ class Scan(threading.Thread):
             service_scan.cookies = self.cookies
             fingerprint(resp, service_scan)
         except Exception as e:
+            # print(e)
             pass
         finally:
-            try:
+            if service_scan:
                 service_scan.save()
-            except Exception as e:
-                print(e)
-                return
 
 
 def port_scan(ips, port_list, isStart=False, description="", group=1, webvpn="", cookies=""):
@@ -206,14 +204,18 @@ def get_count(task_id, page=0, each_num=0):  # 获取结果集总数
     return service_list.count()
 
 
-def get_results(task_id, isAll=False, page=1, each_num=100):  # 获取扫描结果，isAll=True获取所有结果，否则获取未显示结果
+def get_results(task_id="", isAll=False, page=1, each_num=100, group_id=0, ip=""):  # 获取扫描结果，isAll=True获取所有结果，否则获取未显示结果
     result_list = []
     if isAll:
         query = "1=1"
     else:
         query = "isShown=False"
-    query += " and taskid=%s and ip in (select t.ip from (select distinct ip from servicescanmodel_servicescan where taskid=%s limit %d, %d) t)" % (
-        task_id, task_id, (page - 1) * each_num, each_num)
+    if not isAll:
+        query += " and taskid=%s and ip in (select t.ip from (select distinct ip from servicescanmodel_servicescan where taskid=%s limit %d, %d) t)" % (
+            task_id, task_id, (page - 1) * each_num, each_num)
+    else:
+        query += f" and ip in (select t.ip from (select distinct ip from servicescanmodel_servicescan where taskid={task_id} limit {(page - 1) * each_num}, {each_num}) t)" \
+                 f' and taskid in (select distinct id from scantaskmodel_scantask where `group`="{group_id}")'
     service_list = ServiceScan.objects.order_by("ip").extra(where=[query])
     temp_ip = ""
     result = {}
@@ -227,9 +229,11 @@ def get_results(task_id, isAll=False, page=1, each_num=100):  # 获取扫描结�
             result["vulnerable"] = i.vulnerable
             result["note"] = i.note
             result["ports"] = []
-        result["ports"].append({"label": port_label[i.port] if i.port in port_label else "http-%d" % i.port,
+        port_result = {"label": port_label[i.port] if i.port in port_label else "http-%d" % i.port,
                                 "type": i.type, "title": i.title, "server": i.server, "url": i.url,
-                                "port": i.port})
+                                "port": i.port}
+        if not port_result in result["ports"]:
+            result["ports"].append(port_result)
         i.isShown = True
         i.save()
     if result:

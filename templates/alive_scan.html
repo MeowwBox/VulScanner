@@ -243,20 +243,6 @@
 
 
         $(function () {
-            task_id = {{ task.id }}
-                $("[data-toggle='popover']").on('show.bs.popover', function () {
-                    $("[data-toggle='popover']").not(this).popover("hide")
-                })
-            isPause = {% if isPause %}true{% else %}false{% endif %}
-            result_count =
-                {{ count }}
-                {% if process != 100 %}
-                    animate_ico(isPause)
-                    {% if not isPause and task %}
-                        refresh_table()
-                    {% endif %}
-                {% else %}
-                {% endif %}
 
             $(".refresh-btn").click(function () {
                 location.href = "/scan/alive/?id=" + task_id
@@ -276,6 +262,21 @@
             {% if new_ip %}
                 test()
             {% endif %}
+            task_id = {{ task.id }}
+                $("[data-toggle='popover']").on('show.bs.popover', function () {
+                    $("[data-toggle='popover']").not(this).popover("hide")
+                })
+            isPause = {% if isPause %}true{% else %}false{% endif %}
+            result_count =
+                {{ count }}
+                {% if process != 100 %}
+                    animate_ico(isPause)
+                    {% if not isPause and task %}
+                        refresh_table()
+                    {% endif %}
+                {% else %}
+                {% endif %}
+
 
             /*初始化下选栏，暂时不需要*/
         })

@@ -347,6 +347,9 @@ glyphicon-eye-open
                 $("[data-toggle='popover']").on('show.bs.popover', function () {
                     $("[data-toggle='popover']").not(this).popover("hide")
                 })
+            {% if new_ip %}
+                test()
+            {% endif %}
             isPause = {% if isPause %}true{% else %}false{% endif %}
             result_count =
                 {{ count }}
@@ -357,9 +360,7 @@ glyphicon-eye-open
                     {% endif %}
                 {% else %}
                 {% endif %}
-            {% if new_ip %}
-                test()
-            {% endif %}
+
         })
 
     </script>

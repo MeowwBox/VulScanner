@@ -58,6 +58,7 @@ urlpatterns = [
     path('json/clear/note/', json.clear_note),
     path('json/switch/poc/', json.switch_poc),
     path('json/change/fofa/', json.change_fofa),
+    path('json/info/', json.more_info),
     path('tool/cmd/', tool.cmd),
     path('tool/cmd/change/', tool.change_cmd_type),
     path('tool/pwdlist/', tool.pwd_list),
