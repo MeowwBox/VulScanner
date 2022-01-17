@@ -188,6 +188,10 @@
         input[type=checkbox]:checked::before {
             font: normal normal normal 14px/2 FontAwesome;
         }
+
+        .label-extract {
+            background-color: #b8c8be;
+        }
     </style>
     <div class="container col-md-10 col-md-offset-1">
         <div class="panel panel-default text-center">
@@ -361,26 +365,28 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                                 <tbody class="table-context" class="context">
                                 {% for i in result_list %}
                                     <tr class="tr-info">
-                                        <td class="count">{{ forloop.counter }}</td>
+                                        <td>{{ forloop.counter }}</td>
                                         <td><span>{{ i.ip }} </span></td>
-                                        <td class="port">{% for p in i.ports %}
+                                        <td>{% for p in i.ports %}
                                             {% if p.type == "high" %}
-                                                <label class="label label-danger">{{ p.label }}</label>
+                                                <label class="label label-danger
                                             {% elif p.type == "medium" %}
-                                                <label class="label label-primary">{{ p.label }}</label>
-                                            {% else %}
-                                                <label class="label label-success">{{ p.label }}</label>
+                                                <label class=" label label-primary
+                                            {% elif p.type == "low" %}
+                                                <label class="label label-success
                                             {% endif %}
+                                            {% if p.isExtract %}
+                                            label-extract extract
+                                            {% endif %}
+                                            ">{{ p.label }}</label>
                                         {% endfor %}
-{#                                            <a href="javascript:void(0)" class="unactive"#}
-{#                                               onclick="more_info($(this), '{{ i.ip }}')">#}
-{#                                                <span class="glyphicon glyphicon-search pull-right"#}
-{#                                                      style="color: #ce8483"></span></a>#}
                                         </td>
                                         <td>
                                             {% for p in i.ports %}
                                                 {% if p.title %}
-                                                    <label class="label label-default" data-toggle="popover"
+                                                    <label class="label
+                                                    label-default{% if p.isExtract %} extract label-extract{% endif %}"
+                                                           data-toggle="popover"
                                                            data-placement="auto right"
                                                            data-title="Title: {{ p.title }}"
                                                            data-content="Port: {{ p.port }}<br>Server: {{ p.server }}"
@@ -396,15 +402,14 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                                                    style="height: 22px" name="note"/>
                                             <span class="note">{{ i.note }}</span>
                                         </td>
-                                        <td class="eye"><a href="#"><span id="{{ i.ip }}"
-                                                                          class="glyphicon service
+                                        <td class="eye"><a href="#">
+                                            <span id="{{ i.ip }}" class="glyphicon service
                                                               {% if not i.vulnerable %}
                                                               glyphicon-eye-close
-{% else %}
-glyphicon-eye-open
-{% endif %}">
-
-                                        </span></a>
+                                                              {% else %}
+                                                              glyphicon-eye-open
+                                                              {% endif %}">
+                                            </span></a>
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -436,35 +441,10 @@ glyphicon-eye-open
     {% block servicebody %}
         <script>
             $(".tr-info").hover(function () {
-                $(this).children("td.port").children("a").removeClass("unactive").addClass("active")
+                $(this).children("td").children(".extract").removeClass("label-extract")
             }, function () {
-                $(this).children("td.port").children("a").addClass("unactive").removeClass("active")
-
+                $(this).children("td").children(".extract").addClass("label-extract")
             })
-
-            function more_info(ele, ip) {
-                tr_ele = ele.parent("td").parent("tr")
-                count_ele = ele.parent("td").siblings(".count")
-                $.get("/json/info/", {
-                    "ip": ip,
-                    "group": "{{ task.group }}",
-                    "count": count_ele.html()
-                }, function (data) {
-                    tr_ele.html(data)
-                    active_toggle()
-                })
-            }
-
-            function active_toggle() {
-                $("[data-toggle='popover']").hover(function () {
-                    $(this).popover('show')
-                }, function () {
-                    $(this).popover('hide')
-                })
-                $("[data-toggle='popover']").on('show.bs.popover', function () {
-                    $("[data-toggle='popover']").not(this).popover("hide")
-                })
-            }
 
 
             {#function more_info(ele, id) {#}
@@ -654,7 +634,7 @@ glyphicon-eye-open
                 $(".selectpicker").val(group)
                 task_id =
                     {{ task.id }}
-                active_toggle()
+                    active_toggle()
                 {% if new_ip %}
                     test()
                 {% endif %}

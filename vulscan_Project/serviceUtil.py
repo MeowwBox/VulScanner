@@ -6,6 +6,7 @@ import os
 
 import threading
 import socket
+import time
 import traceback
 
 import requests
@@ -205,6 +206,7 @@ def get_count(task_id, page=0, each_num=0):  # 获取结果集总数
 
 
 def get_results(task_id="", isAll=False, page=1, each_num=100, group_id=0, ip=""):  # 获取扫描结果，isAll=True获取所有结果，否则获取未显示结果
+    start = time.time()
     result_list = []
     if isAll:
         query = "1=1"
@@ -216,7 +218,10 @@ def get_results(task_id="", isAll=False, page=1, each_num=100, group_id=0, ip=""
     else:
         query += f" and ip in (select t.ip from (select distinct ip from servicescanmodel_servicescan where taskid={task_id} limit {(page - 1) * each_num}, {each_num}) t)" \
                  f' and taskid in (select distinct id from scantaskmodel_scantask where `group`="{group_id}")'
+    self_query = f"ip in (select t.ip from (select distinct ip from servicescanmodel_servicescan where taskid={task_id} limit {(page - 1) * each_num}, {each_num}) t) " \
+                 f"and taskid = {task_id}"
     service_list = ServiceScan.objects.order_by("ip").extra(where=[query])
+    self_ports = [i["port"] for i in ServiceScan.objects.values("port").order_by("ip").extra(where=[self_query])]
     temp_ip = ""
     result = {}
     for i in service_list:
@@ -229,11 +234,16 @@ def get_results(task_id="", isAll=False, page=1, each_num=100, group_id=0, ip=""
             result["vulnerable"] = i.vulnerable
             result["note"] = i.note
             result["ports"] = []
+            result["specify"] = []
+        specify = {"port": i.port}
         port_result = {"label": port_label[i.port] if i.port in port_label else "http-%d" % i.port,
-                                "type": i.type, "title": i.title, "server": i.server, "url": i.url,
-                                "port": i.port}
-        if not port_result in result["ports"]:
+                       "type": i.type , "title": i.title, "server": i.server, "url": i.url,
+                       "port": i.port}
+        if not specify in result["specify"]:
+            if not i.port in self_ports:
+                port_result["isExtract"] = True
             result["ports"].append(port_result)
+            result["specify"].append(specify)
         i.isShown = True
         i.save()
     if result:

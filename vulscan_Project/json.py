@@ -17,6 +17,7 @@ label_dict = {
     "high": "<label class='label label-danger'>{text}</label>",
     "medium": "<label class='label label-primary'>{text}</label>",
     "low": "<label class='label label-success'>{text}</label>",
+    "extract": "<label class='label label-extract'>{text}</label>"
 }
 
 service_row = """"
