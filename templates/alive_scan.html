@@ -182,11 +182,7 @@
                     })
                     result_count = data["count"]
                     reload_process((+data["process"]))
-                    $("[data-toggle='popover']").hover(function () {
-                        $(this).popover('show')
-                    }, function () {
-                        $(this).popover('hide')
-                    })
+                    active_toggle()
                     $("[data-toggle='popover']").on('show.bs.popover', function () {
                         $("[data-toggle='popover']").not(this).popover("hide")
                     })
@@ -263,9 +259,7 @@
                 test()
             {% endif %}
             task_id = {{ task.id }}
-                $("[data-toggle='popover']").on('show.bs.popover', function () {
-                    $("[data-toggle='popover']").not(this).popover("hide")
-                })
+            active_toggle()
             isPause = {% if isPause %}true{% else %}false{% endif %}
             result_count =
                 {{ count }}

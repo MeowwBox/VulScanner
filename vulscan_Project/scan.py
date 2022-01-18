@@ -103,7 +103,7 @@ def scan(request: HttpRequest, mode, query):
             ctx["process"] = task.vuln_process / task.vuln_count * 100 if not task.vuln_count == 0 else 0
             ctx["poc_type_list"] = poc_type_list
             count = vulnUtil.get_count(task_id)
-            result_list = vulnUtil.get_results(task_id, isAll=True, page=page, each_num=each_num)
+            result_list = vulnUtil.get_results(task_id, isAll=True, page=page, each_num=each_num, group_id=task.group)
         elif mode == "ip" or mode == "alive":
             ctx["process"] = task.service_process / task.task_count * 100 if not task.task_count == 0 else 0
             count = resultUtil.get_count(task_id)
@@ -195,7 +195,7 @@ def start_scan(request: HttpRequest):
         elif mode == "vuln":
             task_id = request.POST["id"]
             vuln_type = request.POST["type"]  # 后期添加漏洞库支持，根据vuln_type获取扫描漏洞类型
-            if not vulnUtil.vuln_scan(task_id, int(vuln_type)):
+            if not vulnUtil.vuln_scan(task_id, int(vuln_type), group_id=ScanTask.objects.get(id=task_id).group):
                 return HttpResponse("fail")
         elif mode == "fofa":
             query = request.POST["ips"]

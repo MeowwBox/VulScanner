@@ -16,8 +16,7 @@ from . import serviceUtil, vulnUtil, IpModelUtil, scan, pageUtil, resultUtil
 label_dict = {
     "high": "<label class='label label-danger'>{text}</label>",
     "medium": "<label class='label label-primary'>{text}</label>",
-    "low": "<label class='label label-success'>{text}</label>",
-    "extract": "<label class='label label-extract'>{text}</label>"
+    "low": "<label class='label label-success'>{text}</label>"
 }
 
 service_row = """"
@@ -203,7 +202,7 @@ def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结
             new_rows, count = get_new_rows(new_result, count)
     elif mode == "vuln":
         process = task.vuln_process / task.vuln_count if task.vuln_count != 0 else 0
-        new_result = vulnUtil.get_results(task_id)
+        new_result = vulnUtil.get_results(task_id, group_id=task.group)
         if new_result != [{}]:
             status = "open"
             for i in new_result:

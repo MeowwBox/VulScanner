@@ -33,15 +33,15 @@ def get_count(task_id, page=0, each_num=0):  # 获取结果集总数
     return service_list.count()
 
 
-def get_results(task_id, isAll=False, page=1, each_num=100):  # 获取扫描结果，isAll=True获取所有结果，否则获取未显示结果
-    select_sql = "select vulnscanmodel_vulnscan.id, vulnscanmodel_vulnscan.ip, servicescanmodel_servicescan.port, vulnscanmodel_vulnscan.port, servicescanmodel_servicescan.url, vulnerability, risk, vulnscanmodel_vulnscan.description, servicescanmodel_servicescan.title, servicescanmodel_servicescan.server, servicescanmodel_servicescan.type from vulnscanmodel_vulnscan  INNER join servicescanmodel_servicescan  on (servicescanmodel_servicescan.ip = vulnscanmodel_vulnscan.ip and servicescanmodel_servicescan.taskid=vulnscanmodel_vulnscan.taskid) where {query}"
+def get_results(task_id, isAll=False, page=1, each_num=100, group_id=0):  # 获取扫描结果，isAll=True获取所有结果，否则获取未显示结果
+    select_sql = "select vulnscanmodel_vulnscan.id, vulnscanmodel_vulnscan.ip, servicescanmodel_servicescan.port, vulnscanmodel_vulnscan.port, servicescanmodel_servicescan.url, vulnerability, risk, vulnscanmodel_vulnscan.description, servicescanmodel_servicescan.title, servicescanmodel_servicescan.server, servicescanmodel_servicescan.type from vulnscanmodel_vulnscan  INNER join servicescanmodel_servicescan  on (servicescanmodel_servicescan.ip = vulnscanmodel_vulnscan.ip) where {query}"
     update_sql = "update  vulnscanmodel_vulnscan set isShown=1 where id = {id}"
     result_list = []
     if isAll:
         query = "1=1"
     else:
         query = "vulnscanmodel_vulnscan.isShown=False"
-    query += " and vulnscanmodel_vulnscan.taskid=%s limit %d, %d" % (task_id, (page - 1) * each_num, each_num)
+    query += f" and vulnscanmodel_vulnscan.taskid=%s and servicescanmodel_servicescan.taskid in (select distinct id from scantaskmodel_scantask where `group`=\"{group_id}\") order by vulnscanmodel_vulnscan.ip limit %d, %d" % (task_id, (page - 1) * each_num, each_num)
     print(query)
     result = {}
     temp_ip = ""
@@ -58,24 +58,28 @@ def get_results(task_id, isAll=False, page=1, each_num=100):  # 获取扫描结�
                 result = {}
             result["ip"] = i["ip"]
             result["ports"] = []
+            result["specify"] = []
             result["vulns"] = []
         vuln = {"port": i["vport"], "vulnerability": i["vulnerability"], "risk": i["risk"], "description": i["description"], "id": i["id"]}
         if not vuln in result["vulns"]:
             result["vulns"].append(vuln)
-        result["ports"].append({"label": port_label[i["sport"]] if i["sport"] in port_label else "http-%d" % i["sport"],
+        port_result = {"label": port_label[i["sport"]] if i["sport"] in port_label else "http-%d" % i["sport"],
                                 "type": i["type"], "title": i["title"], "server": i["server"], "url": i["url"],
-                                "port": i["sport"]})
+                                "port": i["sport"]}
+        specify_result = {"port":i["sport"]}
+        if not specify_result in result["specify"]:
+            result["ports"].append(port_result)
+            result["specify"].append(specify_result)
         cursor.execute(update_sql.format(id=i["id"]))
     if result:
         result_list.append(result)
     return result_list
 
 
-def vuln_scan(task_id, vuln_type=0):
+def vuln_scan(task_id, vuln_type=0, group_id=0):
     q = "isUse=1"
     if vuln_type > 0:
         q += "& type = %s" % poc_type_list[vuln_type]
-    print(q)
     try:
         poc_module_list = [(i.poc_name, i.risk, i.poc_name) for i in pocModelUtil.get_pocs(q=q)]
     except:
@@ -108,7 +112,7 @@ def vuln_scan(task_id, vuln_type=0):
                                     vulnerability=result[0],
                                     description=result[1][:200], risk=result[2], module=result[3], specify=result[4],
                                     cookies=p.service.cookies)
-                    service_list = ServiceScan.objects.filter(ip=p.service.ip, taskid=task_id)
+                    service_list = ServiceScan.objects.extra(where=[f"ip={p.service.ip} and taskid in (select distinct id from scantaskmodel_scantask where groupid={group_id})"])
                     for i in service_list:
                         i.vulnerable = True
                         if not vulnscan.vulnerability in i.note:

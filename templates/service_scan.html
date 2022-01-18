@@ -192,6 +192,7 @@
         .label-extract {
             background-color: #b8c8be;
         }
+
     </style>
     <div class="container col-md-10 col-md-offset-1">
         <div class="panel panel-default text-center">
@@ -446,6 +447,17 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                 $(this).children("td").children(".extract").addClass("label-extract")
             })
 
+            function active_toggle(){
+                $("[data-toggle='popover']").hover(function () {
+                        $(this).popover('show')
+                    }, function () {
+                        $(this).popover('hide')
+                    })
+                $("[data-toggle='popover']").on('show.bs.popover', function () {
+                    $("[data-toggle='popover']").not(this).popover("hide")
+                })
+            }
+
 
             {#function more_info(ele, id) {#}
             {#    /*踩坑，不能预先设置data-toggle="popover"属性，否则会提前渲染，无法改变其他属性*/#}
@@ -557,7 +569,6 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
     {% endblock %}
     {% block scriptbody %}
         <script>
-
             group = "{{ gid }}"
 
             $(".ip-list").click(function () {
@@ -632,12 +643,12 @@ word-wrap: break-word;">RCE端口 （{{ ports.0 }}）</a></li>
                 $(".selectpicker").selectpicker({})
                 $('.selectpicker').selectpicker('render');
                 $(".selectpicker").val(group)
-                task_id =
-                    {{ task.id }}
-                    active_toggle()
-                {% if new_ip %}
+                {% if new_ip %}active_toggle
                     test()
                 {% endif %}
+                task_id =
+                    {{ task.id }}
+                active_toggle()
                 isPause = {% if isPause %}true{% else %}false{% endif %}
                 result_count =
                     {{ count }}

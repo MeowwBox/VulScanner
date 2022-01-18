@@ -438,9 +438,7 @@
 
             task_id =
                 {{ task.id }}
-                $("[data-toggle='popover']").on('show.bs.popover', function () {
-                    $("[data-toggle='popover']").not(this).popover("hide")
-                })
+            active_toggle()
             isPause = {% if isPause %}true{% else %}false{% endif %}
             result_count =
                 {{ count }}
