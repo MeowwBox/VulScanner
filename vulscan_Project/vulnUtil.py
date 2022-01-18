@@ -76,10 +76,11 @@ def get_results(task_id, isAll=False, page=1, each_num=100, group_id=0):  # èŽ·å
     return result_list
 
 
-def vuln_scan(task_id, vuln_type=0, group_id=0):
+def vuln_scan(task_id, vuln_type=0):
     q = "isUse=1"
     if vuln_type > 0:
         q += "& type = %s" % poc_type_list[vuln_type]
+    print(q)
     try:
         poc_module_list = [(i.poc_name, i.risk, i.poc_name) for i in pocModelUtil.get_pocs(q=q)]
     except:
@@ -128,7 +129,7 @@ def vuln_scan(task_id, vuln_type=0, group_id=0):
         poc_count = len(poc_module_list)
     else:
         poc_count = len(poc_module_list)
-    task_list = [i for i in ServiceScan.objects.extra(where=[f"ip in (select distinct ip from servicescanmodel_servicescan where taskid={task_id}) and taskid in (select id from scantaskmodel_scantask where `group`={group_id})"])]
+    task_list = [i for i in ServiceScan.objects.filter(taskid=task_id)]
     task.vuln_count = poc_count * len(task_list)
     task.save(update_fields=["vuln_count"])
     poc_list = []

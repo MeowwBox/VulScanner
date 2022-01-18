@@ -195,7 +195,7 @@ def start_scan(request: HttpRequest):
         elif mode == "vuln":
             task_id = request.POST["id"]
             vuln_type = request.POST["type"]  # 后期添加漏洞库支持，根据vuln_type获取扫描漏洞类型
-            if not vulnUtil.vuln_scan(task_id, int(vuln_type), group_id=ScanTask.objects.get(id=task_id).group):
+            if not vulnUtil.vuln_scan(task_id, int(vuln_type)):
                 return HttpResponse("fail")
         elif mode == "fofa":
             query = request.POST["ips"]
