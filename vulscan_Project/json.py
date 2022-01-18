@@ -195,6 +195,7 @@ def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结
         task = ScanTask.objects.get(id=task_id)
         count = int(request.GET["count"])
     new_rows = ""
+    last_page = 0
     if mode == "service" or mode == "fofa":
         new_result = serviceUtil.get_results(task_id, group_id=task.group)
         process = task.service_process / task.task_count
@@ -274,7 +275,7 @@ def get_async_result(request: HttpRequest):  # 伪异步，获取实时扫描结
         new_result = Group.objects.all()
         for i in new_result:
             new_rows += group_option.format(id=i.id, name=i.name)
-    return HttpResponse(json.dumps({"html": new_rows, "count": count, "process": process}))
+    return HttpResponse(json.dumps({"html": new_rows, "count": count, "process": process, "last_page": last_page}))
 
 
 def get_task_id(request: HttpRequest):

@@ -112,7 +112,7 @@ def vuln_scan(task_id, vuln_type=0, group_id=0):
                                     vulnerability=result[0],
                                     description=result[1][:200], risk=result[2], module=result[3], specify=result[4],
                                     cookies=p.service.cookies)
-                    service_list = ServiceScan.objects.extra(where=[f"ip={p.service.ip} and taskid in (select distinct id from scantaskmodel_scantask where groupid={group_id})"])
+                    service_list = ServiceScan.objects.filter(ip=p.service.ip, taskid=task_id)
                     for i in service_list:
                         i.vulnerable = True
                         if not vulnscan.vulnerability in i.note:
@@ -128,7 +128,7 @@ def vuln_scan(task_id, vuln_type=0, group_id=0):
         poc_count = len(poc_module_list)
     else:
         poc_count = len(poc_module_list)
-    task_list = [i for i in ServiceScan.objects.filter(taskid=task_id)]
+    task_list = [i for i in ServiceScan.objects.extra(where=[f"ip in (select distinct ip from servicescanmodel_servicescan where taskid={task_id}) and taskid in (select id from scantaskmodel_scantask where `group`={group_id})"])]
     task.vuln_count = poc_count * len(task_list)
     task.save(update_fields=["vuln_count"])
     poc_list = []
