@@ -1,3 +1,0 @@
-weblogic
-system
-WEBLOGIC

@@ -62,7 +62,7 @@ def get_ctx(ctx, showmenu, query="1=1", mode="", group=1):
                                                                  group=group).extra(
             where=[query])
     else:
-        task_list = ScanTask.objects.order_by("id").all().filter(
+        task_list = ScanTask.objects.order_by("group", "id").all().filter(
             mode="" if (mode == 'service' or mode == "vuln") else mode).extra(where=[query])
     if mode == "service":
         ctx["ports"] = [i for i in port_dict.values()]

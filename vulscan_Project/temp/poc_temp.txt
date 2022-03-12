@@ -7,6 +7,8 @@ class POC:
         self.service = service
         self.requestUtil = Requests(service.cookies)
         self.result = False
+        self.speciality = ""
+        self.description = ""
 
 
     def fingerprint(self):
@@ -19,6 +21,7 @@ class POC:
     def poc(self):
         try:
             if self.result:
-                return ["{vuln}"]
+                self.service.save()
+                return ["Spring Gateway RCE", self.description], self.speciality
         except:
             return []

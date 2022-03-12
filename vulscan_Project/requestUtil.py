@@ -17,7 +17,6 @@ headers = {
 
 
 def get_cookies(cookie_str):
-    print(cookie_str)
     cookie_dict = {i.split("=")[0].strip(): "=".join(i.split("=")[1:]).strip() for i in cookie_str.split(";")}
     return cookie_dict
 
@@ -66,7 +65,6 @@ def post(url, data="", cookies="", header=None, timeout=5, session="", files=Non
         header = {}
     if not "Content-Type" in header and not shell:
         header = dict(header, **{"Content-Type": "application/x-www-form-urlencoded"})
-    print(header)
     if files == None:
         files = {}
     f_headers = dict(f_headers, **header)

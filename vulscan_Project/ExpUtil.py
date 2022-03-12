@@ -14,7 +14,6 @@ def exp(request: HttpRequest):
     else:
         content = ""
     try:
-        print(request.GET["cmd"])
         result = func(request.GET["cmd"], content).replace("\\t", " "*4).strip()
     except Exception as e:
         traceback.print_exc()

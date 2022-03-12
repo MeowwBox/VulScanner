@@ -268,7 +268,7 @@ def fofa_scan(query, isStart=False, description="", page=1):
     b_query = base64.b64encode(query.encode()).decode()
     FOFA_SIZE = conf.get("setting", "FOFA_SIZE")
     resp = requestUtil.get(
-        f"https://fofa.so/api/v1/search/all?email={FOFA_EMAIL}&key={FOFA_KEY}&qbase64={b_query}&size={FOFA_SIZE}&page={page}",
+        f"https://fofa.info/api/v1/search/all?email={FOFA_EMAIL}&key={FOFA_KEY}&qbase64={b_query}&size={FOFA_SIZE}&page={page}",
         timeout=20)
     print(resp.text)
     results = (json.loads(resp.text))["results"]

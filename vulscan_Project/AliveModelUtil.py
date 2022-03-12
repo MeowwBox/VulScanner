@@ -40,12 +40,6 @@ def get_c_ip_count(ip_range):
     count = 1
     for i in range(0, 3):
         count += ((int(ip_range[1].split(".")[i]) - int(ip_range[0].split(".")[i])) * pow(256, 2 - i))
-    # ip_list = [".".join(i.split(".")[:-1]) + ".0/24" for i in (IpUtil.get_all_ips(ips))]
-    # c_ip_List = []
-    # for i in ip_list:
-    #     if i not in c_ip_List:
-    #         c_ip_List.append(i)
-    # return c_ip_List
     return count
 
 
